@@ -5,12 +5,12 @@ import pycyphal.application
 
 # DSDL Message Types
 import uavcan.node # noqa
-import uavcan.node.heartbeat
 import uavcan.si.sample.temperature  # noqa
 import uavcan.si.unit.temperature  # noqa
 import uavcan.si.unit.voltage  # noqa
 
 import zubax
+
 
 class CyphalMotor():
     def __init__(self, esc_id: int) -> None:
@@ -21,8 +21,8 @@ class CyphalMotor():
         self._node = pycyphal.application.make_node(node_info)
         
         # Create Subscribers
-        self.heartbeat_sub = self._node.make_subscriber(uavcan.node.Heartbeat_1)
-        self.heartbeat_sub.receive_in_background(self.heartbeat_cb)
+        self.status_sub = self._node.make_subscriber(zubax.service.actuator.Status_1)
+        self.status_sub.receive_in_background(self.status_cb)
 
         self._node.start()
 
@@ -31,7 +31,7 @@ class CyphalMotor():
          print(f"RUN Got Message State: {msg.value}")
 
 
-    async def heartbeat_cb(self, msg: uavcan.node.Heartbeat_1, transport_data: pycyphal.transport.TransferFrom) -> None:
+    async def status_cb(self, msg: uavcan.node.Heartbeat_1, transport_data: pycyphal.transport.TransferFrom) -> None:
         print(f"Got Message State: {msg.value}")
         print(transport_data)
 
