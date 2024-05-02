@@ -25,7 +25,12 @@ class CyphalMotor():
         self.heartbeat_sub.receive_in_background(self.heartbeat_cb)
 
         self._node.start()
-    
+
+    async def run(self):
+        async for msg, _ in self.heartbeat_sub:
+         print(f"RUN Got Message State: {msg.value}")
+
+
     async def heartbeat_cb(self, msg: uavcan.node.Heartbeat_1, transport_data: pycyphal.transport.TransferFrom) -> None:
         print(f"Got Message State: {msg.value}")
         print(transport_data)
@@ -35,8 +40,13 @@ class CyphalMotor():
 
 async def main():
     esc = CyphalMotor(5600)
-    async for msg, transport_data in esc.heartbeat_sub:
-         print(f"Got Message State: {msg.value}")
+    try:
+        await esc.run()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        esc.close()
+    
 
 if __name__ == "__main__":
     main()
