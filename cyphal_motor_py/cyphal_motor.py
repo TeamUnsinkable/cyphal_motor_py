@@ -29,10 +29,11 @@ class CyphalMotor():
         self._node.start()
 
     async def run(self):
-        msg= self.status_sub.receive_for(100)
-        print(msg)
-        if msg is not None:
-            print(f"I got STATUS: {msg}")
+        result = await self.status_sub.receive_for(100)
+        if result is not None:
+            message, transfer_data = result
+            print(f"I got STATUS: {message}")
+            print(transfer_data)
         else:
             print("I did not get a message")
         # Works but don't like it, could block for whatever reason.
