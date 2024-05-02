@@ -29,13 +29,10 @@ class CyphalMotor():
         self._node.start()
 
     async def run(self):
-        result, transfer_data = await self.status_sub.receive()
-        if result is not None:
-            print(f"RUN Got STATUS : {result}")
-            print(transfer_data)
-        else:
-            print("Did not recieve status before timeout")
-
+        async for m, _metadata in self.status_sub:
+            print(f"Recieved STATUS message: {m}")
+            break
+        
         
         
 
