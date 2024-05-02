@@ -10,6 +10,9 @@ import uavcan.si.unit.temperature  # noqa
 import uavcan.si.unit.voltage  # noqa
 
 import zubax
+import zubax.service
+import zubax.service.actuator
+
 
 
 class CyphalMotor():
