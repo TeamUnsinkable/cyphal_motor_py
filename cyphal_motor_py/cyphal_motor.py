@@ -1,4 +1,5 @@
 import os
+import asyncio
 import pycyphal  # Importing PyCyphal will automatically install the import hook for DSDL compilation.
 import pycyphal.application
 
@@ -25,15 +26,17 @@ class CyphalMotor():
 
         self._node.start()
     
-    def heartbeat_cb(self, msg: uavcan.node.Heartbeat_1, transport_data: pycyphal.transport.TransferFrom) -> None:
+    async def heartbeat_cb(self, msg: uavcan.node.Heartbeat_1, transport_data: pycyphal.transport.TransferFrom) -> None:
         print(f"Got Message State: {msg.value}")
         print(transport_data)
 
     def close(self):
         self._node.close()
 
-def main():
-    CyphalMotor(5600)
+async def main():
+    esc = CyphalMotor(5600)
+    async for msg, transport_data in esc.heartbeat_sub:
+         print(f"Got Message State: {msg.value}")
 
 if __name__ == "__main__":
     main()
