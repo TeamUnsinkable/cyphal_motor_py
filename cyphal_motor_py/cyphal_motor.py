@@ -54,6 +54,7 @@ class CyphalMotor():
             raise ValueError("RATIO Setpoint ust be between -1.0 and 1.0")
         # Create Values
         setpoint_values = [0]*31
+        setpoint_values[setpoint_index] = setpoint
         # Create Message
         setpoint_msg = zubax.primitive.real16.Vector31_1(setpoint_values)
         # Return publish result
@@ -68,9 +69,10 @@ async def main():
     esc = CyphalMotor(1,155, 65)
     try:
         setpoint = input("Enter a ratio_setpoint: ")
+        setpoint = float(setpoint)
         while (1):
             await esc.recieve_status()
-            await esc.publish_setpoint(setpoint)
+            await esc.publish_setpoint(setpoint, 0)
         await esc.publish_setpoint(0)
     except KeyboardInterrupt:
         pass
