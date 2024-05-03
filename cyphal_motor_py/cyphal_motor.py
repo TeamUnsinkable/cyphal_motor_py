@@ -20,7 +20,7 @@ import zubax.primitive.real16
 
 
 class CyphalMotor():
-    def __init__(self, motor_id: int, status_id: int, rat_setpoint_id: int) -> None:
+    def __init__(self, motor_id: int, status_id: int, rat_setpoint_id: int, readiness_id: int) -> None:
         # Generate information for Yakut
         node_info = uavcan.node.GetInfo_1.Response(
             software_version=uavcan.node.Version_1(major=0, minor=1),
@@ -33,6 +33,7 @@ class CyphalMotor():
         self.status_sub = self._node.make_subscriber(zubax.service.actuator.Status_1, status_id)
         # We use rat_torque
         self.setpoint_pub = self._node.make_publisher(zubax.primitive.real16.Vector31_1, rat_setpoint_id)
+        self.readiness_pub = self._node.make_publisher(zubax.service.Readiness_1, readiness_id)
 
         # Start node
         self._node.start()
@@ -47,6 +48,14 @@ class CyphalMotor():
             print(transfer_data)
         else:
             print("I did not get a message")        
+    
+    async def publish_readiness(self, readiness: int):
+        if readiness not in [0, 2, 3]:
+            raise ValueError("Readiness is not within range")
+        # Create Message
+        readiness_msg = zubax.service.Readiness_1(readiness)
+        # Return publish result
+        return await self.setpoint_pub.publish(readiness_msg)
     
     async def publish_setpoint(self, setpoint: int, setpoint_index: int):
         # Check if within limits
@@ -70,10 +79,11 @@ async def main():
     try:
         setpoint = input("Enter a ratio_setpoint: ")
         setpoint = float(setpoint)
+        await esc.publish_readiness(3)
         while (1):
             await esc.recieve_status()
             await esc.publish_setpoint(setpoint, 0)
-        await esc.publish_setpoint(0)
+        await esc.publish_readiness(0)
     except KeyboardInterrupt:
         pass
     finally:
