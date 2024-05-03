@@ -19,11 +19,11 @@ import zubax.primitive.real16
 
 
 class CyphalMotor():
-    def __init__(self, status_id: int, rat_setpoint_id: int) -> None:
+    def __init__(self, motor_id: int, status_id: int, rat_setpoint_id: int) -> None:
         # Generate information for Yakut
         node_info = uavcan.node.GetInfo_1.Response(
             software_version=uavcan.node.Version_1(major=0, minor=1),
-            name="org.amra.cyphal_motor_py.cyphal_motor",
+            name="org.amra.cyphal_motor_py.cyphal_motor_"+motor_id,
         )
         # Create Node on network
         self._node = pycyphal.application.make_node(node_info)
@@ -46,14 +46,31 @@ class CyphalMotor():
             print(transfer_data)
         else:
             print("I did not get a message")        
+    
+    async def publish_setpoint(self, setpoint: int):
+        # Check if within limits
+        if setpoint < -1 or setpoint > 1:
+            raise ValueError("RATIO Setpoint ust be between -1.0 and 1.0")
+        # Create Limit
+        setpoint_msg = zubax.primitive.real16.Vector31_1()
+        # Populate Message
+        setpoint_msg.value = setpoint
+        # Return publish result
+        return await self.setpoint_pub.publish(setpoint_msg)
+
+        
         
     def close(self):
         self._node.close()
 
 async def main():
-    esc = CyphalMotor(155, 65)
+    esc = CyphalMotor(1,155, 65)
     try:
-        await esc.recieve_status()
+        setpoint = input("Enter a ratio_setpoint: ")
+        while (1):
+            await esc.recieve_status()
+            await esc.publish_setpoint(setpoint)
+        await esc.publish_setpoint(0)
     except KeyboardInterrupt:
         pass
     finally:
