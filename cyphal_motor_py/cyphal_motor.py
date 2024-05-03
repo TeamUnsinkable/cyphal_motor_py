@@ -11,50 +11,49 @@ import uavcan.si.unit.voltage  # noqa
 
 import zubax
 import zubax.service
+import zubax.primitive
 import zubax.service.actuator
+import zubax.primitive.real16
+
 
 
 
 class CyphalMotor():
-    def __init__(self, status_id: int) -> None:
+    def __init__(self, status_id: int, rat_setpoint_id: int) -> None:
+        # Generate information for Yakut
         node_info = uavcan.node.GetInfo_1.Response(
             software_version=uavcan.node.Version_1(major=0, minor=1),
             name="org.amra.cyphal_motor_py.cyphal_motor",
         )
+        # Create Node on network
         self._node = pycyphal.application.make_node(node_info)
         
         # Create Subscribers
         self.status_sub = self._node.make_subscriber(zubax.service.actuator.Status_1, status_id)
+        # We use rat_torque
+        self.setpoint_pub = self._node.make_publisher(zubax.primitive.real16.Vector31_1, rat_setpoint_id)
 
+        # Start node
         self._node.start()
 
-    async def run(self):
+    async def recieve_status(self) -> zubax.service.actuator.Status_1:
+        # Wait for message, returns None of not recieved
         result = await self.status_sub.receive_for(100)
         if result is not None:
+            # result is actully tuple
             message, transfer_data = result
             print(f"I got STATUS: {message}")
             print(transfer_data)
         else:
-            print("I did not get a message")
-        # Works but don't like it, could block for whatever reason.
-        # async for m, _metadata in self.status_sub:
-        #     print(f"Recieved STATUS message: {m}")
-        #     break
-
+            print("I did not get a message")        
         
-        
-
-    async def status_cb(self, msg: uavcan.node.Heartbeat_1, transport_data: pycyphal.transport.TransferFrom) -> None:
-        print(f"Got Message State: {msg.value}")
-        print(transport_data)
-
     def close(self):
         self._node.close()
 
 async def main():
-    esc = CyphalMotor(65)
+    esc = CyphalMotor(155, 65)
     try:
-        await esc.run()
+        await esc.recieve_status()
     except KeyboardInterrupt:
         pass
     finally:
