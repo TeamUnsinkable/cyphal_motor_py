@@ -2,6 +2,7 @@ import os
 import asyncio
 import pycyphal  # Importing PyCyphal will automatically install the import hook for DSDL compilation.
 import pycyphal.application
+import numpy as np
 
 # DSDL Message Types
 import uavcan.node # noqa
@@ -23,7 +24,7 @@ class CyphalMotor():
         # Generate information for Yakut
         node_info = uavcan.node.GetInfo_1.Response(
             software_version=uavcan.node.Version_1(major=0, minor=1),
-            name="org.amra.cyphal_motor_py.cyphal_motor_"+motor_id,
+            name="org.amra.cyphal_motor_py.cyphal_motor_"+str(motor_id),
         )
         # Create Node on network
         self._node = pycyphal.application.make_node(node_info)
@@ -47,14 +48,14 @@ class CyphalMotor():
         else:
             print("I did not get a message")        
     
-    async def publish_setpoint(self, setpoint: int):
+    async def publish_setpoint(self, setpoint: int, setpoint_index: int):
         # Check if within limits
         if setpoint < -1 or setpoint > 1:
             raise ValueError("RATIO Setpoint ust be between -1.0 and 1.0")
-        # Create Limit
-        setpoint_msg = zubax.primitive.real16.Vector31_1()
-        # Populate Message
-        setpoint_msg.value = setpoint
+        # Create Values
+        setpoint_values = [0]*31
+        # Create Message
+        setpoint_msg = zubax.primitive.real16.Vector31_1(setpoint_values)
         # Return publish result
         return await self.setpoint_pub.publish(setpoint_msg)
 
