@@ -33,7 +33,7 @@ class CyphalMotor():
         # Create Subscribers
         self.status_sub = self._node.make_subscriber(zubax.service.actuator.Status_1, status_id)
         self.status_sub.receive_in_background(self.recieve_status)
-        self.last_status = zubax.service.actuator.Status_1()
+        self.last_status = None
 
         # We use rat_torque
         self.setpoint_pub = self._node.make_publisher(zubax.primitive.real16.Vector31_1, rat_setpoint_id)
@@ -45,7 +45,8 @@ class CyphalMotor():
     @staticmethod
     async def recieve_status(msg, transfer_data):
         # Wait for message, returns None of not recieved
-        CyphalMotor.last_status = msg
+        print(f"I got STAUS: {msg}")
+        __class__.last_status = msg
         
     async def publish_readiness(self, readiness: int):
         if readiness not in [0, 2, 3]:
