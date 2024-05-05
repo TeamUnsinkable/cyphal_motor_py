@@ -77,11 +77,11 @@ async def main():
     try:
         setpoint = input("Enter a ratio_setpoint: ") 
         setpoint = float(setpoint) # * max => scaled_setpoint
-        await esc.publish_readiness(3) 
+        #await esc.publish_readiness(3) 
         while (1):
             # await esc.recieve_status()
             await esc.publish_setpoint(setpoint, 0) # type: ignore
-        await esc.publish_readiness(0)
+        #await esc.publish_readiness(0)
     except KeyboardInterrupt:
         pass
     finally:
