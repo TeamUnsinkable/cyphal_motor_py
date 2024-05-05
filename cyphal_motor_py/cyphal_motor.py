@@ -41,16 +41,10 @@ class CyphalMotor():
         self._node.start()
 
     @staticmethod
-    async def recieve_status(self, msg, transfer_data):
+    async def recieve_status(msg, transfer_data):
         # Wait for message, returns None of not recieved
-        result = await self.status_sub.receive_for(100)
-        if result is not None:
-            # result is actully tuple
-            message, transfer_data = result
-            print(f"I got STATUS: {message}")
-            print(transfer_data)
-        else:
-            print("I did not get a message")        
+        print(f"I got STATUS: {msg}")
+        
 
     
     async def publish_readiness(self, readiness: int):
