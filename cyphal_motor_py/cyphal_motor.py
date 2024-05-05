@@ -22,7 +22,8 @@ import zubax.primitive.real16
 class CyphalMotor():
     # Persistant States
     last_status = None
-    
+
+
     def __init__(self, motor_id: int, status_id: int, rat_setpoint_id: int, readiness_id: int) -> None:
         # Generate information for Yakut
         node_info = uavcan.node.GetInfo_1.Response(
@@ -38,7 +39,7 @@ class CyphalMotor():
         
 
         # We use rat_torque
-        self.setpoint_pub = self._node.make_publisher(zubax.primitive.real16.Vector31_1, rat_setpoint_id)
+        self.setpoint_pub = self._node.make_publisher(zubax.primitive.real16.Scalar_1_0, rat_setpoint_id)
         self.readiness_pub = self._node.make_publisher(zubax.service.Readiness_1, readiness_id)
 
         # Start node
@@ -63,13 +64,10 @@ class CyphalMotor():
         # Check if within limits
         if setpoint < -1 or setpoint > 1:
             raise ValueError("RATIO Setpoint ust be between -1.0 and 1.0")
-        # Create Values
-        setpoint_values = [0.0]*31
-        setpoint_values[setpoint_index] = setpoint
         # Create Message
-        setpoint_msg = zubax.primitive.real16.Vector31_1(setpoint_values)
+        setpoint_msg = zubax.primitive.real16.Scalar_1_0(setpoint)
         # Return publish result
-        return await self.setpoint_pub.publish(setpoint_msg)
+        await self.setpoint_pub.publish(setpoint_msg)
 
         
     def close(self):
