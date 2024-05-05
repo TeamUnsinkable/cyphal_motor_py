@@ -16,7 +16,6 @@ import zubax.service
 import zubax.primitive
 import zubax.service.actuator
 import zubax.primitive.real16
-import zubax.primitive.scalar
 
 
 
