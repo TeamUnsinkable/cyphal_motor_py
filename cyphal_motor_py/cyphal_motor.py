@@ -20,6 +20,9 @@ import zubax.primitive.real16
 
 
 class CyphalMotor():
+    # Persistant States
+    last_status = None
+    
     def __init__(self, motor_id: int, status_id: int, rat_setpoint_id: int, readiness_id: int) -> None:
         # Generate information for Yakut
         node_info = uavcan.node.GetInfo_1.Response(
@@ -32,7 +35,7 @@ class CyphalMotor():
         # Create Subscribers
         self.status_sub = self._node.make_subscriber(zubax.service.actuator.Status_1, status_id)
         self.status_sub.receive_in_background(self.recieve_status)
-        self.last_status = None
+        
 
         # We use rat_torque
         self.setpoint_pub = self._node.make_publisher(zubax.primitive.real16.Vector31_1, rat_setpoint_id)
@@ -45,7 +48,7 @@ class CyphalMotor():
     async def recieve_status(msg, transfer_data):
         # Wait for message, returns None of not recieved
         print(f"I got STAUS: {msg}")
-        __class__.last_status = msg
+        CyphalMotor.last_status = msg
         
     async def publish_readiness(self, readiness: int):
         if readiness not in [0, 2, 3]:
