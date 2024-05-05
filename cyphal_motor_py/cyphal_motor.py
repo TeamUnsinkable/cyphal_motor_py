@@ -32,6 +32,7 @@ class CyphalMotor():
         
         # Create Subscribers
         self.status_sub = self._node.make_subscriber(zubax.service.actuator.Status_1, status_id)
+        self.status_sub.receive_in_background(self.recieve_status)
         # We use rat_torque
         self.setpoint_pub = self._node.make_publisher(zubax.primitive.real16.Vector31_1, rat_setpoint_id)
         self.readiness_pub = self._node.make_publisher(zubax.service.Readiness_1, readiness_id)
@@ -39,8 +40,8 @@ class CyphalMotor():
         # Start node
         self._node.start()
 
-
-    async def recieve_status(self) -> zubax.service.actuator.Status_1:
+    @staticmethod
+    async def recieve_status(self, msg, transfer_data):
         # Wait for message, returns None of not recieved
         result = await self.status_sub.receive_for(100)
         if result is not None:
