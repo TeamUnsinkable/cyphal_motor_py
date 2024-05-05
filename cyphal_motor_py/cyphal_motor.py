@@ -10,12 +10,13 @@ import uavcan.si.sample.temperature  # noqa
 import uavcan.si.unit.temperature  # noqa
 import uavcan.si.unit.voltage  # noqa
 
+
 import zubax
 import zubax.service
 import zubax.primitive
 import zubax.service.actuator
 import zubax.primitive.real16
-
+import zubax.primitive.scalar
 
 
 
@@ -38,6 +39,7 @@ class CyphalMotor():
         # Start node
         self._node.start()
 
+
     async def recieve_status(self) -> zubax.service.actuator.Status_1:
         # Wait for message, returns None of not recieved
         result = await self.status_sub.receive_for(100)
@@ -48,6 +50,7 @@ class CyphalMotor():
             print(transfer_data)
         else:
             print("I did not get a message")        
+
     
     async def publish_readiness(self, readiness: int):
         if readiness not in [0, 2, 3]:
@@ -57,12 +60,13 @@ class CyphalMotor():
         # Return publish result
         return await self.setpoint_pub.publish(readiness_msg)
     
-    async def publish_setpoint(self, setpoint: int, setpoint_index: int):
+    
+    async def publish_setpoint(self, setpoint: float, setpoint_index: int):
         # Check if within limits
         if setpoint < -1 or setpoint > 1:
             raise ValueError("RATIO Setpoint ust be between -1.0 and 1.0")
         # Create Values
-        setpoint_values = [0]*31
+        setpoint_values = [0.0]*31
         setpoint_values[setpoint_index] = setpoint
         # Create Message
         setpoint_msg = zubax.primitive.real16.Vector31_1(setpoint_values)
@@ -75,14 +79,14 @@ class CyphalMotor():
         self._node.close()
 
 async def main():
-    esc = CyphalMotor(1,155, 65)
+    esc = CyphalMotor(1, 155, 65, 45)
     try:
-        setpoint = input("Enter a ratio_setpoint: ")
-        setpoint = float(setpoint)
-        await esc.publish_readiness(3)
+        setpoint = input("Enter a ratio_setpoint: ") 
+        setpoint = float(setpoint) # * max => scaled_setpoint
+        await esc.publish_readiness(3) 
         while (1):
-            await esc.recieve_status()
-            await esc.publish_setpoint(setpoint, 0)
+            # await esc.recieve_status()
+            await esc.publish_setpoint(setpoint, 0) # type: ignore
         await esc.publish_readiness(0)
     except KeyboardInterrupt:
         pass
