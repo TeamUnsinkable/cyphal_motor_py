@@ -18,6 +18,7 @@ class CyphalMotorNode(Node):
         self.timer = self.create_timer(self.deadman_timeout, self.cb_timer)
 
     def cb_setpoint(self, msg):
+        self._logger.info(f"Recieved setpoint. R:{msg.data} S:{round(msg.data, 2)}")
         self.setpoint = msg.data
         
     
@@ -44,7 +45,7 @@ class CyphalMotorNode(Node):
         self.declare_parameter("status_id", 1200)
         self.declare_parameter("rat_setpoint_id", 1100)
         self.declare_parameter("readiness_id", 0)
-        self.declare_parameter("deadman_timeout", 0.5)
+        self.declare_parameter("deadman_timeout", 0.35)
 
         # Get Parameters
         self.motor_id        =  self.get_parameter("motor_id")

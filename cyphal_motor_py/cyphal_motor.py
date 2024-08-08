@@ -10,7 +10,6 @@ import uavcan.si.sample.temperature  # noqa
 import uavcan.si.unit.temperature  # noqa
 import uavcan.si.unit.voltage  # noqa
 
-
 import zubax
 import zubax.service
 import zubax.primitive
@@ -36,7 +35,7 @@ class CyphalMotor():
         # Create Subscribers
         self.status_sub = self._node.make_subscriber(zubax.service.actuator.Status_1, status_id)
         self.status_sub.receive_in_background(self.recieve_status)
-        
+        self._node.heartbeat_publisher = self._node.make_publisher(uavcan.node.Heartbeat_1_0)
 
         # We use rat_torque
         self.setpoint_pub = self._node.make_publisher(zubax.primitive.real16.Scalar_1_0, rat_setpoint_id)
@@ -44,6 +43,8 @@ class CyphalMotor():
 
         # Start node
         self._node.start()
+
+        self.hb_task = asyncio.create_task(self.publish_heartbeat())
 
     @staticmethod
     async def recieve_status(msg, transfer_data):
@@ -59,7 +60,6 @@ class CyphalMotor():
         # Return publish result
         return await self.setpoint_pub.publish(readiness_msg)
     
-    
     async def publish_setpoint(self, setpoint: float, setpoint_index: int):
         # Check if within limits
         if setpoint < -1 or setpoint > 1:
@@ -69,8 +69,19 @@ class CyphalMotor():
         # Return publish result
         await self.setpoint_pub.publish(setpoint_msg)
 
+    async def heartbeat_publisher(self):
+        while True:
+            heartbeat_msg = uavcan.node.Heartbeat_1_0()
+            heartbeat_msg.uptime = int(self._node.uptime)
+            heartbeat_msg.health = uavcan.node.Heartbeat_1_0.HEALTH_OK
+            heartbeat_msg.mode = uavcan.node.Heartbeat_1_0.MODE_OPERATIONAL
+            heartbeat_msg.vendor_specific_status_code = 0
+            await self._node.heartbeat_publisher.publish(heartbeat_msg)
+            await asyncio.sleep(1)  # Publish heartbeat every second
+
         
     def close(self):
+        self.hb_task.cancel()
         self._node.close()
 
 async def main():
